@@ -1,0 +1,118 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WEBAPIDEMO.Models;
+
+namespace WEBAPIDEMO.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class CustomerController : ControllerBase
+    {
+        [HttpGet]
+        public List<Customer> GetCustomers()
+        {
+            List<Customer> customers = new List<Customer>();
+            using (var db = new cust_addressContext())
+            {
+                customers = db.Customers.ToList();
+            }
+            return customers;
+        }
+
+        [HttpGet]
+        public List<Customer> GetCustomersAddress()
+        {
+            List<Customer> customers = new List<Customer>();
+            using (var db = new cust_addressContext())
+            {
+                customers = db.Customers.Include(cust => cust.Customeraddresses).ToList();
+            }
+            return customers;
+        }
+
+        //save only cust
+        /*
+         * {
+  
+  "firstName": "Indra",
+  "lastName": "Kale1",
+  "phone": "99999"
+  
+         * */
+
+        //Save Cust with Address
+        /*
+         * {
+  
+  "firstName": "Arun",
+  "lastName": "Sinha",
+  "phone": "1213",
+  "customeraddresses": [
+    {
+     
+      "city": "Pune",
+      "country": "India"
+      
+    },
+   {
+     
+      "city": "Solapur",
+      "country": "India"
+      
+    }
+  ]
+}
+         */
+        [HttpPost]
+        public Customer Savecust(Customer customer)
+        {
+            using (var db = new cust_addressContext())
+            {
+                db.Customers.Add(customer);
+                db.SaveChanges();
+            }
+            return customer;
+        }
+
+
+        [HttpDelete]
+        public bool Deletecust(int id)
+        {
+            using (var db = new cust_addressContext())
+            {
+                Customer cust = db.Customers.Find(id);
+                List<Customeraddress> addlist = db.Customeraddresses.Where(cust => cust.CustomerId == id).ToList();
+                if (addlist != null)
+                    db.Customeraddresses.RemoveRange(addlist);
+                db.Customers.Remove(cust);
+                db.SaveChanges();
+            }
+            return true;
+        }
+
+
+        [HttpPost]
+        public string Updatecust(Customer customer)
+        {
+            using (var db = new cust_addressContext())
+            {
+                Customer cust = db.Customers.Find(customer.Id);
+                cust.FirstName = customer.FirstName;
+                cust.LastName = customer.LastName;
+                cust.Phone = customer.Phone;
+                db.SaveChanges();
+            }
+            return "Customer Updated Successfully";
+        }
+
+        [HttpGet]
+        public Customer Getcust(int id)
+        {
+            using (var db = new cust_addressContext())
+            {
+                return db.Customers.Find(id);
+            }
+        }
+
+    }
+}
